@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Doctor Dashboard · MedQueue{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div>
+    <h1>Doctor Dashboard</h1>
+    <p>Welcome, <strong>Dr. {{ doc.doctor_name }}</strong> &middot; {{ today|fmtdate }}</p>
+  </div>
+  <a href="{{ url_for('doctor_logout') }}" class="btn btn-outline btn-sm">Logout</a>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-icon st-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></div>
+    <div><div class="num">{{ total }}</div><div class="lbl">Total Booked Today</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon st-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    <div><div class="num">{{ waiting }}</div><div class="lbl">Waiting Now</div></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon st-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+    <div><div class="num">{{ done }}</div><div class="lbl">Tokens Done Today</div></div>
+  </div>
+</div>
+
+<div class="action-grid">
+  <div class="action-card">
+    <div class="a-icon" style="background:rgba(13,148,136,.12);color:var(--teal)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <h3>My Patient Queue</h3>
+    <p>Open today's queue, attend tokens one by one and mark them done.</p>
+    <a href="{{ url_for('doctor_queue') }}" class="btn btn-primary btn-sm">Open Queue</a>
+  </div>
+  <div class="action-card">
+    <div class="a-icon" style="background:rgba(37,99,235,.12);color:var(--blue)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+    </div>
+    <h3>Download Daily Report</h3>
+    <p>Download how many tokens you completed today as a PDF report.</p>
+    <a href="{{ url_for('doctor_report_pdf') }}" class="btn btn-outline btn-sm">Download Report</a>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Today's Queue Preview</h2>
+  {% if preview %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Token</th><th>Patient</th><th>Time</th><th>Payment</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for p in preview %}
+        <tr>
+          <td><strong>#{{ p.token_number }}</strong></td>
+          <td>{{ p.patient_name }}</td>
+          <td>{{ p.appointment_time }}</td>
+          <td>
+            {% if p.payment_status == 'paid' %}<span class="chip chip-paid">Paid</span>
+            {% elif p.payment_status == 'pending' %}<span class="chip chip-pending">Not Paid</span>
+            {% else %}<span class="chip chip-cash">Cash</span>{% endif %}
+            <div class="muted" style="font-size:.75rem">{{ p.payment_mode|upper }}</div>
+          </td>
+          <td>
+            {% if p.status == 'done' %}<span class="chip chip-done">Done</span>
+            {% else %}<span class="chip chip-waiting">Waiting</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted mt-8">View the full queue with Mark-Done actions on the queue page.</p>
+  {% else %}
+  <div class="empty">
+    <div class="e-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg></div>
+    <h3>No appointments booked for today yet</h3>
+    <p>Once patients book, their tokens will appear here.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

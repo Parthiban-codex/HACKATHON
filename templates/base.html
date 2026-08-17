@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MedQueue Smart Clinic{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script>
+    (function () {
+      var saved = localStorage.getItem('theme');
+      var theme = saved || 'system';
+      if (theme === 'system') {
+        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="{{ url_for('index') }}" class="brand">
+        <span class="brand-icon">
+          <span class="cap-half cap-teal"></span><span class="cap-half cap-rose"></span>
+        </span>
+        <span class="brand-name">CAPSULE-CARE</span>
+      </a>
+      <nav class="nav">
+        {% if session.get('patient_id') %}
+          <span class="nav-user">Patient</span>
+          <a href="{{ url_for('patient_dashboard') }}" class="nav-link">Dashboard</a>
+          <a href="{{ url_for('patient_profile') }}" class="nav-link">Profile</a>
+          <a href="{{ url_for('patient_logout') }}" class="nav-link">Logout</a>
+        {% elif session.get('doctor_id') %}
+          <span class="nav-user">Doctor</span>
+          <a href="{{ url_for('doctor_dashboard') }}" class="nav-link">Dashboard</a>
+          <a href="{{ url_for('doctor_queue') }}" class="nav-link">My Queue</a>
+          <a href="{{ url_for('doctor_profile') }}" class="nav-link">Profile</a>
+          <a href="{{ url_for('doctor_logout') }}" class="nav-link">Logout</a>
+        {% else %}
+          <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+          <a href="{{ url_for('patient_login') }}" class="nav-link">Patient Login</a>
+          <a href="{{ url_for('doctor_login') }}" class="nav-link">Doctor Login</a>
+        {% endif %}
+        <button type="button" class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
+          <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" x2="12" y1="1" y2="3"/><line x1="12" x2="12" y1="21" y2="23"/>
+            <line x1="4.22" x2="5.64" y1="4.22" y2="5.64"/><line x1="18.36" x2="19.78" y1="18.36" y2="19.78"/>
+            <line x1="1" x2="3" y1="12" y2="12"/><line x1="21" x2="23" y1="12" y2="12"/>
+            <line x1="4.22" x2="5.64" y1="19.78" y2="18.36"/><line x1="18.36" x2="19.78" y1="5.64" y2="4.22"/>
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p style="margin-top:6px;font-size:.85rem;opacity:.9">Made with &hearts; by Team <strong>ELITE 404</strong></p>
+      <a href="{{ url_for('team') }}" class="team-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Contact Developing Team
+      </a>
+    </div>
+  </footer>
+  <script>
+    (function () {
+      var btn = document.getElementById('theme-toggle');
+      var icon = document.getElementById('theme-icon');
+      var order = ['light', 'dark', 'system'];
+      var dark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
+      function apply(theme) {
+        var real = theme === 'system' ? (dark.matches ? 'dark' : 'light') : theme;
+        document.documentElement.setAttribute('data-theme', real);
+        if (icon) {
+          icon.innerHTML = theme === 'system'
+            ? '<circle cx="12" cy="12" r="5"/><line x1="12" x2="12" y1="1" y2="3"/><line x1="12" x2="12" y1="21" y2="23"/><line x1="4.22" x2="5.64" y1="4.22" y2="5.64"/><line x1="18.36" x2="19.78" y1="18.36" y2="19.78"/><line x1="1" x2="3" y1="12" y2="12"/><line x1="21" x2="23" y1="12" y2="12"/><line x1="4.22" x2="5.64" y1="19.78" y2="18.36"/><line x1="18.36" x2="19.78" y1="5.64" y2="4.22"/>'
+            : theme === 'dark'
+            ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>'
+            : '<circle cx="12" cy="12" r="5"/><line x1="12" x2="12" y1="1" y2="3"/><line x1="12" x2="12" y1="21" y2="23"/><line x1="4.22" x2="5.64" y1="4.22" y2="5.64"/><line x1="18.36" x2="19.78" y1="18.36" y2="19.78"/><line x1="1" x2="3" y1="12" y2="12"/><line x1="21" x2="23" y1="12" y2="12"/><line x1="4.22" x2="5.64" y1="19.78" y2="18.36"/><line x1="18.36" x2="19.78" y1="5.64" y2="4.22"/>';
+        }
+      }
+      if (btn) {
+        btn.addEventListener('click', function () {
+          var cur = localStorage.getItem('theme') || 'system';
+          var next = order[(order.indexOf(cur) + 1) % order.length];
+          localStorage.setItem('theme', next);
+          apply(next);
+        });
+        btn.title = 'Theme: click to switch Light / Dark / System';
+      }
+      if (dark) {
+        dark.addEventListener('change', function () {
+          if ((localStorage.getItem('theme') || 'system') === 'system') apply('system');
+        });
+      }
+    })();
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

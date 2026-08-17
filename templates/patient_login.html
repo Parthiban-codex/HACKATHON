@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Patient Login · MedQueue{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-head">
+      <div class="auth-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <h1>Patient Login</h1>
+      <p>Sign in to book appointments &amp; track your queue</p>
+    </div>
+    <form method="post" action="{{ url_for('patient_login') }}">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input class="form-control" type="email" name="email" placeholder="you@example.com" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input class="form-control" type="password" name="password" placeholder="Enter your password" required>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Login</button>
+    </form>
+    <div class="auth-foot">
+      <a href="{{ url_for('patient_forgot_password') }}">Forgot password?</a>
+    </div>
+    <div class="auth-foot">New patient? <a href="{{ url_for('patient_register') }}">Create an account</a></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}My Profile · MedQueue{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div>
+    <h1>My Profile</h1>
+    <p>View &amp; update your clinic details — changes are saved to the database</p>
+  </div>
+  <a class="btn btn-outline btn-sm" href="{{ url_for('doctor_dashboard') }}">Back to Dashboard</a>
+</div>
+
+<div class="auth-wrap">
+  <div class="auth-card" style="max-width:680px">
+    <div class="auth-head">
+      <div class="auth-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>
+      </div>
+      <h1>Doctor Profile</h1>
+      <p>Missing fields? Fill them here — they get updated in the database.</p>
+    </div>
+    <form method="post" action="{{ url_for('doctor_profile') }}" enctype="multipart/form-data">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Doctor Name</label>
+          <input class="form-control" name="doctor_name" value="{{ doctor.doctor_name }}" required>
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input class="form-control" name="username" value="{{ doctor.username }}" required>
+        </div>
+        <div class="form-group">
+          <label>Email (for refund requests)</label>
+          <input class="form-control" type="email" name="email" value="{{ doctor.email or '' }}" placeholder="e.g. dr.anand@gmail.com">
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input class="form-control" type="tel" name="mobile" pattern="[0-9+ -]{10,15}" value="{{ doctor.mobile or '' }}" placeholder="e.g. 9876543210">
+        </div>
+        <div class="form-group">
+          <label>Specialization</label>
+          <input class="form-control" name="specialization" value="{{ doctor.specialization or '' }}" placeholder="e.g. Cardiologist">
+        </div>
+        <div class="form-group">
+          <label>Consultation Fees (Rs)</label>
+          <input class="form-control" type="number" name="fees" min="0" step="1" value="{{ '%.0f' % doctor.fees if doctor.fees else '' }}" placeholder="e.g. 200">
+        </div>
+        <div class="form-group">
+          <label>New Password (optional)</label>
+          <input class="form-control" type="password" name="password" placeholder="Leave empty to keep current password">
+        </div>
+        <div class="form-group full">
+          <label>GPay QR Code</label>
+          {% if doctor.gpay_qr %}
+          <img src="{{ doctor.gpay_qr }}" alt="GPay QR" style="width:120px;height:120px;border:1px solid var(--border);border-radius:10px;background:#fff;padding:4px;margin-bottom:8px">
+          <div class="form-hint">Upload a new one to replace it.</div>
+          {% endif %}
+          <input class="form-control" type="file" name="gpay_qr" accept="image/png,image/jpeg,image/gif,image/webp">
+        </div>
+        <div class="form-group full">
+          <label>Confirm New Password</label>
+          <input class="form-control" type="password" name="confirm" placeholder="Re-enter new password">
+        </div>
+      </div>
+      <button class="btn btn-rose btn-block btn-lg" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        Save Changes
+      </button>
+    </form>
+    <div class="auth-foot">Joined: {{ doctor.created_at|fmtdate if doctor.created_at else 'N/A' }} &middot; <a href="{{ url_for('doctor_logout') }}">Logout</a></div>
+  </div>
+</div>
+{% endblock %}

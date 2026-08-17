@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}My Patient Queue · MedQueue{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div>
+    <h1>My Patient Queue</h1>
+    <p>{{ today|fmtdate }} &middot; {{ total }} booked &middot; {{ waiting }} waiting &middot; {{ done }} completed</p>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    {% if queue and not queue_started %}
+    <form method="post" action="{{ url_for('start_queue') }}">
+      <button class="btn btn-rose btn-sm" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+        Start Queue
+      </button>
+    </form>
+    {% elif queue_started %}
+    <span class="welcome-badge">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Queue Started
+    </span>
+    {% endif %}
+    {% if queue %}
+    <form method="post" action="{{ url_for('doctor_postpone_queue') }}" onsubmit="return confirm('Postpone today\'s whole queue? All waiting patients will be notified. Amounts paid are NOT refundable.')">
+      <input type="date" name="new_date" value="{{ tomorrow }}" class="form-control" style="width:auto;padding:6px 10px;border:1px solid var(--border);border-radius:10px;background:var(--card)" required>
+      <button class="btn btn-sm" style="background:var(--amber);color:#fff;border-color:var(--amber)" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Postpone Today's Queue
+      </button>
+    </form>
+    {% endif %}
+    {% if has_postponed %}
+    <form method="post" action="{{ url_for('doctor_cancel_postpone') }}" onsubmit="return confirm('Cancel the postponement? Today\'s postponed appointments will be restored to Waiting.')">
+      <button class="btn btn-sm" style="background:var(--rose);color:#fff;border-color:var(--rose)" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Cancel Postpone
+      </button>
+    </form>
+    {% endif %}
+    <a class="btn btn-primary btn-sm" href="{{ url_for('doctor_report_pdf') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+      Download Today's Report
+    </a>
+  </div>
+</div>
+
+{% if queue %}
+{% if queue_started and attending %}
+<div class="now-serving">
+  <div class="ns-label">Now Serving</div>
+  <div class="ns-token">#{{ attending }}</div>
+  <div class="ns-meta"><div class="ns-name">{{ attending_name }}</div><div>Tap Mark Done after consultation</div></div>
+</div>
+{% elif queue_started %}
+<div class="card" style="padding:18px;border-color:var(--green);margin-bottom:20px">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div class="stat-icon st-green" style="flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+    <div>
+      <strong style="color:var(--green)">All tokens completed for today.</strong>
+      <div class="muted" style="font-size:.88rem">Well done! Download today's report from the top button.</div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card" style="padding:18px;border-color:var(--amber);margin-bottom:20px">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div class="stat-icon st-amber" style="flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    <div>
+      <strong style="color:var(--amber)">Queue not started.</strong>
+      <div class="muted" style="font-size:.88rem">Press <em>Start Queue</em> to begin attending tokens. Until then every patient stays in Waiting.</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Live Queue Board</h2>
+  <div class="queue-board">
+    {% for q in queue %}
+    <div class="token-chip {% if q.status == 'done' %}done{% elif q.status in ('absent','cancelled','postponed') %}off{% elif q.token_number == attending %}attending{% else %}waiting{% endif %}">
+      <div class="tc-no">#{{ q.token_number }}</div>
+      <div class="tc-name">{{ q.patient_name }}</div>
+      <div class="tc-time">{{ q.appointment_time }}</div>
+      <div class="tc-pay">
+        {% if q.payment_status == 'paid' %}<span class="chip chip-paid">Paid</span>
+        {% elif q.payment_status == 'pending' %}<span class="chip chip-pending">Not Paid</span>
+        {% else %}<span class="chip chip-cash">Cash</span>{% endif %}
+      </div>
+      <div class="mt-8">
+        {% if q.status == 'done' %}<span class="chip chip-done">Done</span>
+        {% elif q.status == 'absent' %}<span class="chip chip-absent">Unable to Attend</span>
+        {% elif q.status == 'cancelled' %}<span class="chip chip-cancelled">Cancelled</span>
+        {% elif q.status == 'postponed' %}<span class="chip chip-postponed">Postponed</span>
+        {% elif q.token_number == attending %}<span class="chip chip-attending">Attending</span>
+        {% else %}<span class="chip chip-waiting">Waiting</span>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <h2>Patient List &amp; Actions</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Token</th><th>Patient</th><th>Age</th><th>Time</th><th>Payment</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for q in queue %}
+        <tr>
+          <td><strong>#{{ q.token_number }}</strong></td>
+          <td>{{ q.patient_name }}</td>
+          <td>{{ q.patient_age }}</td>
+          <td>{{ q.appointment_time }}</td>
+          <td>
+            {% if q.payment_status == 'paid' %}<span class="chip chip-paid">Paid</span>
+            {% elif q.payment_status == 'pending' %}<span class="chip chip-pending">Not Paid</span>
+            {% else %}<span class="chip chip-cash">Cash</span>{% endif %}
+            <div class="muted" style="font-size:.75rem">{{ q.payment_mode|upper }}</div>
+          </td>
+          <td>Rs {{ q.amount }}</td>
+          <td>
+            {% if q.status == 'done' %}<span class="chip chip-done">Done</span>
+            {% elif q.status == 'absent' %}<span class="chip chip-absent">Unable to Attend</span>
+            {% elif q.status == 'cancelled' %}<span class="chip chip-cancelled">Cancelled</span>
+            {% elif q.status == 'postponed' %}<span class="chip chip-postponed">Postponed</span>
+            {% elif q.token_number == attending %}<span class="chip chip-attending">Attending</span>
+            {% else %}<span class="chip chip-waiting">Waiting</span>{% endif %}
+          </td>
+          <td>
+            {% if q.status not in ('done', 'absent', 'cancelled', 'postponed') %}
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <form method="post" action="{{ url_for('doctor_toggle_payment', appointment_id=q.id) }}">
+                {% if q.payment_status == 'paid' %}
+                <button class="btn btn-sm" style="background:var(--amber);color:#fff;border-color:var(--amber)" type="submit">Mark Unpaid</button>
+                {% else %}
+                <button class="btn btn-sm" style="background:var(--green);color:#fff;border-color:var(--green)" type="submit">Mark Paid</button>
+                {% endif %}
+              </form>
+              <form method="post" action="{{ url_for('mark_done', appointment_id=q.id) }}">
+                <button class="btn btn-sm btn-primary" type="submit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  Mark Done
+                </button>
+              </form>
+              <form method="post" action="{{ url_for('doctor_cancel_appointment', appointment_id=q.id) }}" onsubmit="return confirm('Cancel this appointment? The queue updates automatically and the next token gets priority.')">
+                <button class="btn btn-sm" style="background:var(--rose);color:#fff;border-color:var(--rose)" type="submit">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>
+                  Cancel
+                </button>
+              </form>
+            </div>
+            {% elif q.status == 'done' %}<span class="muted">Completed</span>
+            {% elif q.status == 'absent' %}<span class="muted">Patient not attended</span>
+            {% else %}<span class="muted">Closed</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted mt-8">Use <em>Mark Paid</em> / <em>Mark Unpaid</em> to record payment (Paid / Cash tokens get priority). When you mark a token <em>Done</em>, the patient's token becomes inactive and they can set medicine reminders.</p>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty">
+    <div class="e-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg></div>
+    <h3>No appointments booked for today yet</h3>
+    <p>Share your clinic details with patients so they can book and get a token.</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

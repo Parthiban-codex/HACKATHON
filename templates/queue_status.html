@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Live Queue · MedQueue{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div>
+    <h1>Live Queue Status</h1>
+    <p>Real-time position of your appointment</p>
+  </div>
+</div>
+
+{% if mine %}
+<div class="card">
+  <h2>Select your appointment</h2>
+  <form method="post" action="{{ url_for('queue_status') }}" class="form-grid" style="grid-template-columns:1fr auto;gap:12px;align-items:end">
+    <div class="form-group" style="margin-bottom:0">
+      <label>Appointment</label>
+      <select class="form-control" name="appointment_id">
+        {% for a in mine %}
+        <option value="{{ a.id }}" {% if selected and a.id == selected.id %}selected{% endif %}>
+          Dr. {{ a.doctor_name }} &middot; {{ a.appointment_date|fmtdate }} &middot; Token #{{ a.token_number }} ({{ a.status|capitalize }})
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">View Queue</button>
+  </form>
+</div>
+
+{% if selected %}
+{% if queue_started and attending %}
+<div class="now-serving">
+  <div class="ns-label">Now Serving</div>
+  <div class="ns-token">#{{ attending }}</div>
+  <div class="ns-meta">
+    <div class="ns-name">Dr. {{ selected.doctor_name }}</div>
+    <div>{{ selected.appointment_date|fmtdate }}</div>
+  </div>
+</div>
+{% elif not queue_started %}
+<div class="card" style="padding:18px;background:var(--card);border-color:var(--amber);margin-bottom:20px">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div class="stat-icon st-amber" style="flex-shrink:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    <div>
+      <strong style="color:var(--amber)">Queue has not started yet.</strong>
+      <div class="muted" style="font-size:.88rem">All tokens are currently in Waiting status. The queue starts when the doctor presses <em>Start Queue</em>.</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Dr. {{ selected.doctor_name }} &middot; {{ selected.appointment_date|fmtdate }}</h2>
+  {% if queue %}
+  <div class="queue-board">
+    {% for q in queue %}
+    <div class="token-chip {{ q.cls }}">
+      <div class="tc-no">#{{ q.token }}</div>
+      <div class="tc-name">{{ q.name }}</div>
+      <div class="tc-time">{{ q.time }}</div>
+      <div class="tc-pay">
+        {% if q.pay == 'paid' %}<span class="chip chip-paid">Paid</span>
+        {% elif q.pay == 'pending' %}<span class="chip chip-pending">Not Paid</span>
+        {% else %}<span class="chip chip-cash">Cash</span>{% endif %}
+      </div>
+      <div class="mt-8"><span class="chip chip-{{ q.cls }}">{{ q.label }}</span></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="queue-legend">
+    <span><i class="dot ql-attending"></i> Attending</span>
+    <span><i class="dot ql-waiting"></i> Waiting</span>
+    <span><i class="dot ql-you"></i> Your token</span>
+    <span><i class="dot ql-done"></i> Completed</span>
+    <span><i class="dot ql-absent"></i> Unable to Attend</span>
+    <span><i class="dot ql-cancelled"></i> Cancelled</span>
+    <span><i class="dot ql-postponed"></i> Postponed</span>
+  </div>
+  <div class="queue-note">Earlier tokens on the left &middot; Later tokens on the right &middot; Paid patients get priority tokens</div>
+  {% else %}
+  <div class="empty"><div class="e-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg></div><h3>No appointments for this slot yet</h3><p>Be the first one — your token will appear here.</p></div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="card">
+  <div class="empty">
+    <div class="e-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+    <h3>No appointments yet</h3>
+    <p>Book an appointment to see your live queue position.</p>
+    <a href="{{ url_for('book') }}" class="btn btn-primary mt-16">Book Appointment</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

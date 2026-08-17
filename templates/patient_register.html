@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}Patient Register · MedQueue{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-head">
+      <div class="auth-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
+      </div>
+      <h1>Create Patient Account</h1>
+      <p>Register to book appointments &amp; manage reminders</p>
+    </div>
+    <form method="post" action="{{ url_for('patient_register') }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input class="form-control" name="name" placeholder="e.g. Rahul Kumar" required>
+        </div>
+        <div class="form-group">
+          <label>Age</label>
+          <input class="form-control" type="number" name="age" min="1" max="120" placeholder="e.g. 28" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input class="form-control" type="email" name="email" placeholder="you@example.com" required>
+        </div>
+        <div class="form-group">
+          <label>Mobile Number</label>
+          <input class="form-control" type="tel" name="mobile" pattern="[0-9+ -]{10,15}" placeholder="e.g. 9876543210" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input class="form-control" type="password" name="password" placeholder="Create a password" required>
+        </div>
+        <div class="form-group">
+          <label>Confirm Password</label>
+          <input class="form-control" type="password" name="confirm" placeholder="Re-enter password" required>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Create Account</button>
+    </form>
+    <div class="auth-foot">Already registered? <a href="{{ url_for('patient_login') }}">Login here</a></div>
+  </div>
+</div>
+{% endblock %}

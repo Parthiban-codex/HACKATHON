@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Our Team · MedQueue{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div>
+    <h1>Developing Team</h1>
+    <p>Team ELITE 404 &middot; Contact us for any help</p>
+  </div>
+  <a class="btn btn-outline btn-sm" href="{{ url_for('index') }}">Back to Home</a>
+</div>
+
+<div class="team-hero">
+  <div class="team-hero-badge">TEAM ELITE 404</div>
+  <h2>We built CAPSULE-CARE</h2>
+  <p>Smart Queue & Medicine Reminder System for doctors and patients. Reach out to any of us for help and feedback.</p>
+</div>
+
+<div class="team-grid">
+  {% for name, email in team %}
+  <div class="team-card">
+    <div class="team-avatar">
+      {{ name[0]|upper }}
+    </div>
+    <h3>{{ name|title }}</h3>
+    <p class="team-bio">Student &middot; MCA &middot; Rajiv Gandhi College of Engineering and Technology</p>
+    <a class="team-mail" href="mailto:{{ email }}" title="{{ email }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect width="20" height="16" x="2" y="4" rx="2"/>
+        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+      </svg>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="team-note card" style="text-align:center">
+  <h2 style="margin-bottom:6px">Thanks for using CAPSULE-CARE!</h2>
+  <p class="muted">Book a slot, pay & skip the waiting — your smart clinic queue companion.</p>
+</div>
+{% endblock %}

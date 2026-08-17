@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Doctor Login · MedQueue{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-head">
+      <div class="auth-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6 6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6 6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg>
+      </div>
+      <h1>Doctor Login</h1>
+      <p>Sign in to manage your patient queue</p>
+    </div>
+    <form method="post" action="{{ url_for('doctor_login') }}">
+      <div class="form-group">
+        <label>Username</label>
+        <input class="form-control" name="username" placeholder="Enter your username" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input class="form-control" type="password" name="password" placeholder="Enter your password" required>
+      </div>
+      <button class="btn btn-rose btn-block btn-lg" type="submit">Login</button>
+    </form>
+    <div class="auth-foot">
+      <a href="{{ url_for('doctor_forgot_password') }}">Forgot password?</a>
+    </div>
+    <div class="auth-foot">New doctor? <a href="{{ url_for('doctor_register') }}">Register here</a></div>
+  </div>
+</div>
+{% endblock %}

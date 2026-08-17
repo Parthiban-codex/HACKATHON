@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Book Appointment · MedQueue{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card" style="max-width:680px">
+    <div class="auth-head">
+      <div class="auth-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+      </div>
+      <h1>Book Appointment</h1>
+      <p>Choose your doctor, date, time &amp; payment mode</p>
+    </div>
+
+    <form method="post" action="{{ url_for('book') }}">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Patient Name</label>
+          <input class="form-control" name="patient_name" value="{{ patient.name }}" required>
+        </div>
+        <div class="form-group">
+          <label>Age</label>
+          <input class="form-control" type="number" name="patient_age" min="1" max="120" value="{{ patient.age }}" required>
+        </div>
+        <div class="form-group">
+          <label>Appointment Date</label>
+          <input class="form-control" type="date" name="appointment_date" value="{{ today }}" min="{{ today }}" required>
+        </div>
+        <div class="form-group">
+          <label>Time Slot</label>
+          <select class="form-control" name="appointment_time" required>
+            {% for t in time_slots %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Select Doctor</label>
+          <select class="form-control" id="doctor_id" name="doctor_id" required onchange="updateQR(); updateFees();">
+            <option value="">-- Choose a doctor --</option>
+            {% for d in doctors %}<option value="{{ d.id }}">Dr. {{ d.doctor_name }}{% if d.fees %} — Rs {{ '%.0f' % d.fees }}{% endif %}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Consultation Amount (Rs)</label>
+          <input class="form-control" type="number" name="amount" id="amount" min="0" step="1" value="0" readonly>
+          <div class="form-hint">Amount is auto-set from the doctor's consultation fee.</div>
+        </div>
+        <div class="form-group">
+          <label>Payment Mode</label>
+          <div class="form-row-radio">
+            <label class="radio-pill active">
+              <input type="radio" name="payment_mode" value="cash" checked onchange="updateQR()">
+              <span>Cash on hand</span>
+            </label>
+            <label class="radio-pill">
+              <input type="radio" name="payment_mode" value="gpay" onchange="updateQR()">
+              <span>GPay</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="qr-box" id="gpay-box" style="display:none">
+        <h4>Scan &amp; Pay to <span id="qr-name">Doctor</span></h4>
+        <img id="qr-img" src="" alt="GPay QR Code">
+        <p id="qr-note" style="display:none">This doctor has not uploaded a GPay QR code yet. Please choose cash payment.</p>
+        <p class="mt-8" style="font-size:.82rem;color:var(--teal-dark);font-weight:600">
+          Pay now with GPay, then click "I Have Paid" on your token page. Paid patients get priority tokens!
+        </p>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Confirm Booking</button>
+      <p class="form-hint text-center mt-8" style="text-align:center">
+        Choosing GPay: pay after booking and confirm on the token page to move up the queue. Choosing cash: pay at the clinic.
+      </p>
+      <div class="qr-box" style="border-color:var(--rose);margin-top:10px">
+        <h4 style="color:var(--rose)">Non-Refundable Policy</h4>
+        <p style="font-size:.85rem">Once booked, your consultation amount is <strong style="color:var(--rose)">non-refundable</strong>. If the doctor postpones the appointment, your booking moves to the new date. If the postponement cannot work for you, contact the doctor by email to request a refund.</p>
+      </div>
+    </form>
+
+    <div class="auth-foot">Check live queue? <a href="{{ url_for('queue_status') }}">View queue status</a></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const doctors = {{ doctor_options|tojson }};
+
+  function updateFees() {
+    const id = document.getElementById('doctor_id').value;
+    const doc = doctors.find(function (d) { return String(d.id) === String(id); });
+    document.getElementById('amount').value = doc ? doc.fees : 0;
+  }
+
+  function updateQR() {
+    const mode = document.querySelector('input[name="payment_mode"]:checked').value;
+    const box = document.getElementById('gpay-box');
+    if (mode === 'gpay') {
+      const id = document.getElementById('doctor_id').value;
+      const doc = doctors.find(function (d) { return String(d.id) === String(id); });
+      box.style.display = 'block';
+      document.getElementById('qr-name').textContent = doc ? 'Dr. ' + doc.doctor_name : 'Doctor';
+      const img = document.getElementById('qr-img');
+      const note = document.getElementById('qr-note');
+      if (doc && doc.qr_uri) {
+        img.src = doc.qr_uri;
+        img.style.display = 'inline-block';
+        note.style.display = 'none';
+      } else {
+        img.style.display = 'none';
+        note.style.display = 'block';
+      }
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  document.querySelectorAll('.radio-pill').forEach(function (r) {
+    r.addEventListener('click', function () {
+      document.querySelectorAll('.radio-pill').forEach(function (x) { x.classList.remove('active'); });
+      r.classList.add('active');
+    });
+  });
+</script>
+{% endblock %}

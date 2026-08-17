@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}Medicine Reminders · MedQueue{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div>
+    <h1>Medicine Reminders</h1>
+    <p>Set a reminder after your consultation is complete</p>
+  </div>
+  <span class="welcome-badge">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+    {{ active_reminders|length }} active today
+  </span>
+</div>
+
+{% if active_reminders %}
+<div class="reminder-alert">
+  <div class="ra-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  </div>
+  <div style="flex:1">
+    <h4>Don't forget to take your medicine today!</h4>
+    <p>{% for r in active_reminders %}{{ r.medicine_name }} &middot; {{ r.dosage }} &middot; {{ r.food_timing }}{% if not loop.last %} | {% endif %}{% endfor %}</p>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Set New Reminder</h2>
+  {% if done_appointments %}
+  <form method="post" action="{{ url_for('reminder') }}">
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Completed Consultation (Token)</label>
+        <select class="form-control" name="appointment_id" required>
+          {% for a in done_appointments %}
+          <option value="{{ a.id }}">Token #{{ a.token_number }} &middot; Dr. {{ a.doctor_name }} &middot; {{ a.appointment_date|fmtdate }}</option>
+          {% endfor %}
+        </select>
+        <div class="form-hint">Only completed consultations appear here (doctor marked your token as done).</div>
+      </div>
+      <div class="form-group">
+        <label>Medicine Name</label>
+        <input class="form-control" name="medicine_name" placeholder="e.g. Paracetamol 500mg" required>
+      </div>
+      <div class="form-group">
+        <label>Dosage</label>
+        <input class="form-control" name="dosage" placeholder="e.g. 1 tablet" required>
+      </div>
+      <div class="form-group">
+        <label>Times Per Day</label>
+        <select class="form-control" name="frequency">
+          <option>Once a day</option>
+          <option selected>Twice a day</option>
+          <option>Three times a day</option>
+          <option>Four times a day</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Food Timing</label>
+        <select class="form-control" name="food_timing">
+          <option>Before food</option>
+          <option selected>After food</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input class="form-control" type="date" name="start_date" value="{{ today.isoformat() }}" required>
+      </div>
+      <div class="form-group">
+        <label>Duration (Days)</label>
+        <input class="form-control" type="number" name="duration_days" min="1" max="365" value="5" required>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block btn-lg" type="submit">Save Reminder</button>
+  </form>
+  {% else %}
+  <div class="empty">
+    <div class="e-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg></div>
+    <h3>No completed consultations yet</h3>
+    <p>Reminders can be set only after your doctor marks your token as done.</p>
+    <a href="{{ url_for('book') }}" class="btn btn-primary mt-16">Book an Appointment</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>My Reminders (Today: {{ today|fmtdate }})</h2>
+  {% if reminders %}
+  <div class="reminder-list">
+    {% for r in reminders %}
+    <div class="reminder-card {% if not r.active %}inactive{% endif %}">
+      <div class="rc-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+      </div>
+      <div class="rc-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+          <h4>{{ r.medicine_name }} &middot; {{ r.dosage }}</h4>
+          <div>
+            {% if not r.is_active %}<span class="chip chip-pending">Off</span>
+            {% elif r.active %}<span class="chip chip-active">Active</span>
+            {% else %}<span class="chip chip-done">Completed</span>{% endif %}
+          </div>
+        </div>
+        <p>{{ r.frequency }} &middot; {{ r.food_timing }} &middot; Dr. {{ r.doctor_name }}</p>
+        <div class="rc-bar"><span style="width:{{ r.progress }}%"></span></div>
+        <div class="rc-dates muted">{{ r.start_date|fmtdate }} to {{ r.end_date|fmtdate }} &middot; {{ r.progress }}% done</div>
+      </div>
+      <div>
+        {% if r.is_active %}
+        <form method="post" action="{{ url_for('reminder_toggle', reminder_id=r.id) }}">
+          <button class="btn btn-sm btn-ghost" type="submit" title="Stop this reminder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="5" x2="19" y1="12" y2="12"/></svg>
+            Turn Off
+          </button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('reminder_toggle', reminder_id=r.id) }}">
+          <button class="btn btn-sm btn-primary" type="submit" title="Start this reminder again">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Turn On
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty">
+    <div class="e-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg></div>
+    <h3>No reminders set yet</h3>
+    <p>Add your first medicine reminder above after your consultation.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const activeReminders = {{ active_reminders|tojson }};
+  if ('Notification' in window && activeReminders && activeReminders.length) {
+    Notification.requestPermission().then(function (p) {
+      if (p === 'granted') {
+        activeReminders.forEach(function (r) {
+          new Notification('Medicine Reminder', {
+            body: r.medicine_name + ' - ' + r.dosage + ' (' + r.food_timing + ')',
+            tag: 'reminder-' + r.medicine_name
+          });
+        });
+      }
+    });
+  }
+</script>
+{% endblock %}

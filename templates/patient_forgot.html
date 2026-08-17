@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Forgot Password · MedQueue{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card" style="max-width:520px">
+    <div class="auth-head">
+      <div class="auth-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h1>Reset Patient Password</h1>
+      <p>Enter your registered email &amp; mobile to verify</p>
+    </div>
+    <form method="post" action="{{ url_for('patient_forgot_password') }}">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input class="form-control" type="email" name="email" placeholder="you@example.com" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Mobile Number</label>
+        <input class="form-control" type="tel" name="mobile" placeholder="e.g. 9876543210" required>
+      </div>
+      <div class="form-group">
+        <label>New Password</label>
+        <input class="form-control" type="password" name="password" placeholder="Create a new password" required>
+      </div>
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <input class="form-control" type="password" name="confirm" placeholder="Re-enter new password" required>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">Reset Password</button>
+    </form>
+    <div class="auth-foot">Remembered it? <a href="{{ url_for('patient_login') }}">Login here</a></div>
+  </div>
+</div>
+{% endblock %}
