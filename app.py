@@ -37,7 +37,7 @@ HOSPITAL_NAME = 'Capsule-Care Smart Clinic'
 
 DB_HOST = os.environ.get('DB_HOST', 'localhost')
 DB_USER = os.environ.get('DB_USER', 'root')
-DB_PASSWORD = os.environ.get('DB_PASSWORD', 'parthiban','Root')
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'parthiban')
 DB_NAME = os.environ.get('DB_NAME', 'smart_queue_db')
 DB_PORT = int(os.environ.get('DB_PORT', '3306'))
 DB_SSL = os.environ.get('DB_SSL', '').lower() in ('1', 'true', 'yes')
